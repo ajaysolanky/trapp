@@ -4,3 +4,5 @@ venv/
 cachedir
 **/__pycache__
 resources/*
+uploads/
+processed/

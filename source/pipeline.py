@@ -55,8 +55,8 @@ class Pipeline(object):
             video_link = VideoLipsyncReplicate.get_download_link_synced_video(self.sample_path, output_audio_fpath)
             print(video_link)
 
-Pipeline(
-    'resources/ajay_talking_video_5.mp4',
-    ValidLanguages.HI,
-    'Ajay Solanky'
-).run()
+# Pipeline(
+#     'resources/ajay_talking_video_5.mp4',
+#     ValidLanguages.HI,
+#     'Ajay Solanky'
+# ).run()

@@ -3,3 +3,4 @@ joblib
 openai
 replicate
 requests
+flask
