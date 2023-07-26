@@ -2,3 +2,5 @@ output/*
 .DS_Store
 venv/
 cachedir
+**/__pycache__
+resources/*

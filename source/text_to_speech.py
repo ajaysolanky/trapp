@@ -4,6 +4,7 @@ from datetime import datetime
 from elevenlabs import set_api_key, voices, generate, save
 
 from utilities.cache import cachethis
+from utilities.utils import generate_filename
 from config.valid_languages import ValidLanguages
 
 set_api_key(os.getenv("ELEVEN_LABS_KEY"))
@@ -35,8 +36,9 @@ class TextToSpeech(object):
         model=model.value
         )
 
-    def save_voice_generation_audio(self, audio):
-        outpath = './output/' + f'{self.voice_name}_' + str(datetime.now()).replace(' ', '_') + '.wav'
+    def save_voice_generation_audio(self, audio, outpath):
+        # fname = generate_filename(self.voice_name, 'wav')
+        # outpath = './output/' + fname
 
         directory = os.path.dirname(outpath)
         if directory and not os.path.exists(directory):
@@ -46,9 +48,10 @@ class TextToSpeech(object):
             audio,
             outpath
         )
+        return outpath
     
-    def get_and_save_voice_generation(self, text):
+    def get_and_save_voice_generation(self, text, outpath):
         audio = TextToSpeech.get_voice_generation_audio(self.voice_id, self.model, text)
-        self.save_voice_generation_audio(audio)
+        return self.save_voice_generation_audio(audio, outpath)
 
 # TextToSpeech('Ajay Solanky', ElevenModelEnum.ENGLISH).get_and_save_voice_generation('I')
