@@ -1,6 +1,6 @@
 import json
 import os
-import replicate
+# import replicate
 from abc import ABC, abstractmethod
 
 import requests
@@ -48,6 +48,6 @@ class VideoLipsyncGooey(VideoLipsync):
         return response.json()['output']['output_video']
 
 
-print(VideoLipsyncGooey.get_download_link_synced_video("resources/ajay_talking_video_4.mp4", "output/Ajay_Solanky_20230725_235818.wav"))
+# print(VideoLipsyncGooey.get_download_link_synced_video("resources/ajay_talking_video_4.mp4", "output/Ajay_Solanky_20230725_235818.wav"))
 
 # print(response.status_code, result)

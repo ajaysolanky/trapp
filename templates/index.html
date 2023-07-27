@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Processing</title>
+</head>
+
+<body>
+    <h1>Dubz</h1>
+    <div>Upload an mp4, mov, or mp3 of you talking below. Make sure your face is centered squarely in the frame if it's a video. Limit to 10-15 seconds.</div>
+    <br/>
+
+    <form id="videoForm" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="videoFile" accept=".mov, .mp4, .mp3" required>
+        <label for="language">Output Language:</label>
+        <select name="language" id="language">
+            <option value="HI">Hindi</option>
+            <option value="EN">English</option>
+            <option value="FR">French</option>
+            <option value="DE">German</option>
+            <option value="IT">Italian</option>
+            <option value="PL">Polish</option>
+            <option value="PT">Portuguese</option>
+            <option value="ES">Spanish</option>
+        </select>
+        <input type="submit" value="Go">
+    </form>
+
+    <div id="loading" style="display:none;">
+        <img src="../resources/loading_gif.gif" alt="Loading...">
+    </div>
+
+    <video id="processedVideo" controls style="display:none; max-width:500px; max-height:1000px;"></video>
+    <audio id="processedAudio" controls style="display:none;"></audio>
+    <a href="#" id="downloadButton" download style="display:none;">Download</a>
+
+    <script>
+        document.getElementById('videoForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const videoFileElement = document.getElementById('videoFile');
+
+            if (videoFileElement.files.length > 0) {
+                const uploadedFileName = videoFileElement.files[0].name;
+                formData.append('filename', uploadedFileName);
+            }
+
+            const loading = document.getElementById('loading');
+            const videoElement = document.getElementById('processedVideo');
+            const downloadButton = document.getElementById('downloadButton');
+
+            loading.style.display = 'block';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const fileType = data.download_url.split('?')[0].split('.').pop();  // adjusted file type detection
+                    if (fileType === 'mp4') {
+                        videoElement.src = data.download_url;
+                        videoElement.style.display = 'block';
+                        downloadButton.style.display = 'none';
+                    } else if (fileType === 'mp3') {
+                        const audioElement = document.getElementById('processedAudio');
+                        audioElement.src = data.download_url;
+                        audioElement.style.display = 'block';
+                        videoElement.style.display = 'none';
+                        downloadButton.href = data.download_url;
+                        downloadButton.style.display = 'block';
+                        downloadButton.innerHTML = 'Download MP3';
+                    }
+                    loading.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loading.style.display = 'none';
+                    alert('Something went wrong!');
+                });
+        });
+    </script>
+</body>
+
+</html>

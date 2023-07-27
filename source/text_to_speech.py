@@ -5,7 +5,7 @@ from elevenlabs import set_api_key, voices, generate, save
 
 from utilities.cache import cachethis
 from utilities.utils import generate_filename
-from config.valid_languages import ValidLanguages
+from config.valid_languages import ValidISOLanguages
 
 set_api_key(os.getenv("ELEVEN_LABS_KEY"))
 
@@ -19,7 +19,7 @@ class ElevenModelEnum(Enum):
 class TextToSpeech(object):
     def __init__(self, voice_name, output_language) -> None:
         self.voice_name = voice_name
-        self.model = ElevenModelEnum.ENGLISH if output_language == ValidLanguages.EN else ElevenModelEnum.NONENGLISH
+        self.model = ElevenModelEnum.ENGLISH if output_language == ValidISOLanguages.EN else ElevenModelEnum.NONENGLISH
         self.voice_id = self.get_voice_id(voice_name)
 
     def get_voice_id(self, voice_name):
@@ -37,9 +37,6 @@ class TextToSpeech(object):
         )
 
     def save_voice_generation_audio(self, audio, outpath):
-        # fname = generate_filename(self.voice_name, 'wav')
-        # outpath = './output/' + fname
-
         directory = os.path.dirname(outpath)
         if directory and not os.path.exists(directory):
             os.makedirs(directory)

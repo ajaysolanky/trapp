@@ -2,7 +2,7 @@ from enum import Enum
 from abc import ABC, abstractmethod
 
 from utilities.llm_utils import openai_query
-from config.valid_languages import ValidLanguages, get_full_lang_name
+from config.valid_languages import ValidISOLanguages
 
 class TranslationModels(Enum):
     OPENAI = 0
@@ -23,8 +23,8 @@ class TranslateOpenAI(Translate):
     MODEL = 'gpt-4'
     def translate_string(self, str, input_lang, output_lang):
         # system_role = f'Translate the following Hindi text to English:'
-        input_lang_full = get_full_lang_name(input_lang)
-        output_lang_full = get_full_lang_name(output_lang)
+        input_lang_full = input_lang.value
+        output_lang_full = output_lang.value
         query = f"Translate the following string from {input_lang_full} to {output_lang_full}:\n{str}"
         return openai_query(query, TranslateOpenAI.MODEL)
 
