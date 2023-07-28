@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from utilities.llm_utils import openai_query
 from config.valid_languages import ValidISOLanguages
 
+
 class TranslationModels(Enum):
     OPENAI = 0
+
 
 class Translate(ABC):
     @abstractmethod
@@ -19,13 +21,15 @@ class Translate(ABC):
         """
         pass
 
+
 class TranslateOpenAI(Translate):
     MODEL = 'gpt-4'
+
     def translate_string(self, str, input_lang, output_lang):
         # system_role = f'Translate the following Hindi text to English:'
         input_lang_full = input_lang.value
         output_lang_full = output_lang.value
-        query = f"Translate the following string from {input_lang_full} to {output_lang_full}:\n{str}"
+        query = f"Translate the following string from {input_lang_full} to {output_lang_full}. Don't use formal language, use casual:\n{str}"
         return openai_query(query, TranslateOpenAI.MODEL)
 
 # print(TranslateOpenAI().translate_string('चीनी प्लम बहुत स्वादिष्ट होते हैं', ValidLanguages.HI, ValidLanguages.EN))

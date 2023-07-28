@@ -9,21 +9,23 @@ from config.valid_languages import ValidISOLanguages
 from utilities.utils import convert_mp4_to_mp3, convert_mov_to_mp4
 from utilities.file_upload import S3Uploader
 
+
 class VideoPipeline(object):
-    def __init__(self, sample_path, output_lang, voice_model_name):
+    def __init__(self, sample_path, output_lang, voice_id):
         self.sample_path = sample_path
         self.output_lang = output_lang
-        self.voice_model_name = voice_model_name
-    
+        self.voice_id = voice_id
+
     def run(self):
         print(f"Sample path: {self.sample_path}")
         print(f"output lang: {self.output_lang}")
-        print(f"Voice model name: {self.voice_model_name}")
+        print(f"Voice ID: {self.voice_id}")
         # sample_file_name, sample_file_type = os.path.basename(self.sample_path).split('.')
         sample_file_name, sample_file_type = os.path.splitext(self.sample_path)
-        sample_file_type = sample_file_type.lower() # this is so hacky, there must be a better way
+        # this is so hacky, there must be a better way
+        sample_file_type = sample_file_type.lower()
 
-        #mov to mp3
+        # mov to mp3
         print('CONVERTING MOV TO MP3')
         if sample_file_type.lower() == '.mov':
             new_sample_path = sample_file_name + '.mp4'
@@ -39,25 +41,27 @@ class VideoPipeline(object):
         audio_pipeline = AudioPipeline(
             audio_sample_fpath,
             self.output_lang,
-            self.voice_model_name
+            self.voice_id
         )
 
         output_audio_fpath = audio_pipeline.run()
 
         # Video lipsync
         if sample_file_type == '.mp4':
-            return_link = VideoLipsyncGooey.get_download_link_synced_video(new_sample_path, output_audio_fpath)
+            return_link = VideoLipsyncGooey.get_download_link_synced_video(
+                new_sample_path, output_audio_fpath)
         else:
             raise Exception("Haven't built a way to return audio link yet")
-        
+
         print(f"Return link: {return_link}")
         return return_link
 
+
 class AudioPipeline(object):
-    def __init__(self, sample_path, output_lang, voice_model_name) -> None:
+    def __init__(self, sample_path, output_lang, voice_id) -> None:
         self.sample_path = sample_path
         self.output_lang = output_lang
-        self.voice_model_name = voice_model_name
+        self.voice_id = voice_id
 
     def run(self, local_file=True):
         if not local_file:
@@ -67,7 +71,7 @@ class AudioPipeline(object):
         english_text = stt.audio_filepath_to_text(
             self.sample_path,
             output_language=ValidISOLanguages.EN
-            )
+        )
 
         print(f'English text:\n{english_text}')
 
@@ -79,13 +83,15 @@ class AudioPipeline(object):
                 english_text,
                 ValidISOLanguages.EN,
                 self.output_lang
-                )
+            )
 
         print(f'Translated text:\n{translated_text}')
 
         # Text to speech
-        translated_audio_fpath = f'output/translated_to_{self.output_lang.name}_' + os.path.basename(self.sample_path)
-        output_audio_fpath = TextToSpeech(self.voice_model_name, self.output_lang).get_and_save_voice_generation(translated_text, translated_audio_fpath)
+        translated_audio_fpath = f'output/translated_to_{self.output_lang.name}_' + os.path.basename(
+            self.sample_path)
+        output_audio_fpath = TextToSpeech(self.voice_id, self.output_lang).get_and_save_voice_generation(
+            translated_text, translated_audio_fpath)
         if local_file:
             return output_audio_fpath
         else:
