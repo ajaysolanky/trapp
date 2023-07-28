@@ -28,7 +28,7 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    voice_model_name = 'Ajay Solanky'
+    voice_model_name = request.form.get('voice_model_name')
     language = request.form.get('language')
     if not language:
         return jsonify({"error": "No language selected"}), 500
