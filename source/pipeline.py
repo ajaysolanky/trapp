@@ -7,7 +7,7 @@ from text_to_speech import TextToSpeech
 from video_lipsync import VideoLipsyncGooey, VideoLipsyncReplicate
 from config.valid_languages import ValidISOLanguages
 from utilities.utils import convert_mp4_to_mp3, convert_mov_to_mp4
-from utilities.file_upload import S3Uploader
+from utilities.file_upload import S3UploaderObj
 
 
 class VideoPipeline(object):
@@ -65,7 +65,7 @@ class AudioPipeline(object):
 
     def run(self, local_file=True):
         if not local_file:
-            uploader = S3Uploader()
+            uploader = S3UploaderObj
         # Speech to text
         stt = SpeechToText()
         english_text = stt.audio_filepath_to_text(

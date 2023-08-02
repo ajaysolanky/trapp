@@ -75,6 +75,8 @@ class S3Uploader(FileUploader):
         url = self.client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': BUCKET_NAME, 'Key': target_file_name}, ExpiresIn=DL_LINK_VALID_SECONDS)
         return url
 
+S3UploaderObj = S3Uploader()
+
 # class GoogleStorageUploader(FileUploader):
 #     def init_client(self):
 #         return storage.bucket()

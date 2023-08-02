@@ -8,12 +8,12 @@
 </head>
 
 <body>
-    <h1>Trapp</h1>
-    <div>Upload an mp4, mov, or mp3 of you talking below. Make sure your face is centered squarely in the frame if it's a video. Limit to 10-15 seconds.</div>
+    <h1>Dubz</h1>
+    <div>Upload an mp4, mov, m4a, or mp3 of you talking below. Make sure your face is centered squarely in the frame if it's a video. Limit to 10-15 seconds.</div>
     <br/>
 
     <form id="videoForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="videoFile" accept=".mov, .mp4, .mp3" required>
+        <input type="file" name="file" id="videoFile" accept=".mov, .mp4, .mp3, .m4a" required>
         <label for="language">Output Language:</label>
         <select name="language" id="language">
             <option value="HI">Hindi</option>
