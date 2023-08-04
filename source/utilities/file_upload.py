@@ -8,6 +8,7 @@ import multiprocessing
 from botocore.config import Config
 # from firebase_admin import storage
 from abc import ABC, abstractmethod
+import mimetypes
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID_VAR')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY_VAR')
@@ -16,6 +17,9 @@ DL_LINK_VALID_SECONDS = 60*60*24*30
 
 NUM_UPLOAD_ATTEMPTS = 3
 UPLOAD_TIMEOUT = 3
+
+def get_content_type(file_path):
+    return mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
 
 class FileUploader(ABC):
     def __init__(self):
@@ -58,8 +62,10 @@ class S3Uploader(FileUploader):
         st = time.time()
         if self.client_fetch_thread.is_alive():
             self.client.fetch_thread.join()
+        content_type = get_content_type(file_path)
+        extra_args = {'ContentType': content_type, 'ContentDisposition': 'inline'}
         BUCKET_NAME = 'trapp-files'
-        upload_fn = lambda: self.client.upload_file(file_path, BUCKET_NAME, target_file_name)
+        upload_fn = lambda: self.client.upload_file(file_path, BUCKET_NAME, target_file_name, ExtraArgs=extra_args)
         upload_successful = False
         #TODO: make sure this actually works
         for i in range(NUM_UPLOAD_ATTEMPTS):

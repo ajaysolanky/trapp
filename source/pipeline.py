@@ -1,7 +1,9 @@
 import os
 import uuid
+import threading
 
 from speech_to_text import SpeechToText
+from transcript_summary import TranscriptSummary
 from translate import TranslateOpenAI
 from text_to_speech import TextToSpeech
 from video_lipsync import VideoLipsyncGooey, VideoLipsyncReplicate
@@ -11,10 +13,11 @@ from utilities.file_upload import S3UploaderObj
 
 
 class VideoPipeline(object):
-    def __init__(self, sample_path, output_lang, voice_id):
+    def __init__(self, sample_path, output_lang, voice_id, generate_transcript):
         self.sample_path = sample_path
         self.output_lang = output_lang
         self.voice_id = voice_id
+        self.generate_transcript = generate_transcript
 
     def run(self):
         print(f"Sample path: {self.sample_path}")
@@ -41,10 +44,13 @@ class VideoPipeline(object):
         audio_pipeline = AudioPipeline(
             audio_sample_fpath,
             self.output_lang,
-            self.voice_id
+            self.voice_id,
+            self.generate_transcript
         )
 
-        output_audio_fpath = audio_pipeline.run()
+        audio_pipeline_output = audio_pipeline.run(local_file=True)
+        
+        output_audio_fpath = audio_pipeline_output["audio_filepath"]
 
         # Video lipsync
         if sample_file_type == '.mp4':
@@ -54,16 +60,16 @@ class VideoPipeline(object):
             raise Exception("Haven't built a way to return audio link yet")
 
         print(f"Return link: {return_link}")
-        return return_link
-
+        return {"download_url": return_link} | audio_pipeline_output
 
 class AudioPipeline(object):
-    def __init__(self, sample_path, output_lang, voice_id) -> None:
+    def __init__(self, sample_path, output_lang, voice_id, generate_transcript) -> None:
         self.sample_path = sample_path
         self.output_lang = output_lang
         self.voice_id = voice_id
+        self.generate_transcript = generate_transcript
 
-    def run(self, local_file=True):
+    def run(self, local_file):
         if not local_file:
             uploader = S3UploaderObj
         # Speech to text
@@ -74,6 +80,16 @@ class AudioPipeline(object):
         )
 
         print(f'English text:\n{english_text}')
+
+        if self.generate_transcript:
+            summary_result = {}
+            def summarizer():
+                # hardcoded English for now bc we don't know the input language
+                summary = TranscriptSummary().get_summary(english_text, "English")
+                summary_result['result'] = summary
+
+            t = threading.Thread(target=summarizer)
+            t.start()
 
         # Translation
         if self.output_lang == ValidISOLanguages.EN:
@@ -93,15 +109,26 @@ class AudioPipeline(object):
         output_audio_fpath = TextToSpeech(self.voice_id, self.output_lang).get_and_save_voice_generation(
             translated_text, translated_audio_fpath)
         if local_file:
-            return output_audio_fpath
+            ret_obj = {"audio_filepath": output_audio_fpath}
         else:
             print("CLIENT!!!")
             print(uploader.client)
-            return uploader.upload(output_audio_fpath, str(uuid.uuid4()) + ".mp3")
-            # raise Exception("Need to implement audio upload")
+            dl_link = uploader.upload(output_audio_fpath, str(uuid.uuid4()) + ".mp3")
+            ret_obj = {"download_url": dl_link}
+        if self.generate_transcript:
+            t.join()
+            ret_obj.update({"transcript_summary": summary_result["result"]})
+        ret_obj.update({
+            "voice_id": self.voice_id,
+            "output_lang": self.output_lang.name,
+            "english_transcript": english_text,
+            "transalated_transcript": translated_text
+            })
+        return ret_obj
 
+# import pdb; pdb.set_trace()
 # print(AudioPipeline(
 #     'resources/ajay_talking_video_5.mp4',
 #     ValidISOLanguages.HI,
 #     'Ajay Solanky'
-# ).run(local_file=False))
+# ).run(local_file=False, generate_transcript=True))

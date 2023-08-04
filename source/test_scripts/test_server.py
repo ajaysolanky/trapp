@@ -5,10 +5,10 @@ import requests
 BASE_URL = "http://127.0.0.1:5000/"
 
 
-def upload_video(video_path):
-    with open(video_path, 'rb') as video_file:
-        files = {'file': (video_path.split("/")[-1], video_file)}
-        data = {'filename': os.path.basename(video_path)}
+def process_file(file_path):
+    with open(file_path, 'rb') as video_file:
+        files = {'file': (file_path.split("/")[-1], video_file)}
+        data = {'language': 'HI', 'voice_id': 'aihrQRwznfxTynGbVlKt', 'generate_transcript': True}
         response = requests.post(BASE_URL + 'upload', files=files, data=data)
 
         if response.status_code == 200:
@@ -58,9 +58,9 @@ def add_samples_to_voice(voice_id, filepaths):
     print(response.text)
 
 
-# if __name__ == "__main__":
-    # video_path = "resources/ajay_talking_video_5.mp4"
-    # upload_video(video_path)
+if __name__ == "__main__":
+    file_path = "resources/ajay_talking_video_4.mp4"
+    process_file(file_path)
 
     # filepaths = ['resources/ajay_voice_sample_1.mp3']
     # create_voice(filepaths, 'Test Person', "29 year old American male")

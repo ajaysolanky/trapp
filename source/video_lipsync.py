@@ -2,9 +2,10 @@ import json
 import os
 # import replicate
 from abc import ABC, abstractmethod
-
 import requests
+import uuid
 
+from utilities.file_upload import S3UploaderObj
 from utilities.cache import cachethis
 
 class VideoLipsync(ABC):
@@ -47,7 +48,25 @@ class VideoLipsyncGooey(VideoLipsync):
 
         return response.json()['output']['output_video']
 
+class VideoLipsyncSynchronicity(VideoLipsync):
+    @staticmethod
+    # @cachethis
+    def get_download_link_synced_video(video_path, audio_path):
+        # can parallelize this
+        audio_ext = os.path.splitext(audio_path)[1]
+        audio_link = S3UploaderObj.upload(audio_path, str(uuid.uuid4()) + audio_ext)
+        video_ext = os.path.splitext(video_path)[1]
+        video_link = S3UploaderObj.upload(video_path, str(uuid.uuid4()) + video_ext)
 
-# print(VideoLipsyncGooey.get_download_link_synced_video("resources/ajay_talking_video_4.mp4", "output/Ajay_Solanky_20230725_235818.wav"))
+        # endpoint = 'https://rogue-yogi--wav2lip-2-v0-1-02-generate-sync.modal.run'
+        # response = requests.post(endpoint, data={"audio_uri": audio_link, "video_uri": video_link})
+        response = requests.post(f'https://rogue-yogi--wav2lip-2-v0-1-02-generate-sync.modal.run?audio_uri={audio_link}&video_uri={video_link}')
+
+        if response.status_code == 200:
+            return response.json()
+        raise Exception('Something went wrong')
+
+# import pdb; pdb.set_trace()
+# print(VideoLipsyncSynchronicity.get_download_link_synced_video("resources/ajay_talking_video_4.mp4", "output/Ajay_Solanky_20230725_235818.wav"))
 
 # print(response.status_code, result)

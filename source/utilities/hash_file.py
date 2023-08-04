@@ -12,3 +12,5 @@ def hash_file_from_file_obj(file_obj):
     for byte_block in iter(lambda: file_obj.read(4096), b""):
         sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
+
+# print(hash_file_from_fp('resources/ajay_talking_video_3.mp4'))
