@@ -4,15 +4,15 @@ import shutil
 
 from pipeline import VideoPipeline, AudioPipeline
 from config.valid_languages import ValidISOLanguages
+from config.lipsync_engines import LipsyncEngines
 from voice_lab import VoiceLab
 from utilities.hash_file import hash_file_from_fp
+from utilities.cache import cachethis
+from config.config import UPLOAD_FOLDER, PROCESSED_FOLDER, TEMP_FOLDER
 
 template_dir = os.path.abspath('templates/')
 app = Flask(__name__, template_folder=template_dir)
 
-UPLOAD_FOLDER = 'uploads'
-PROCESSED_FOLDER = 'processed'
-TEMP_FOLDER = 'tmp'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 if not os.path.exists(PROCESSED_FOLDER):
@@ -28,8 +28,7 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    # import pdb; pdb.set_trace()
-    print("SERVER REQUEST")
+    print(f"SERVER REQUEST:\n{request.form}\n{request.files}")
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     file = request.files['file']
@@ -38,11 +37,12 @@ def upload_file():
 
     voice_id = request.form.get('voice_id')
     language = request.form.get('language')
-    generate_transcript = request.form.get('generate_transcript')
+    generate_transcript = request.form.get('generate_transcript') == 'True'
+    lipsync_engine = request.form.get('lipsync_engine', 'GOOEY')
 
     if not language:
         return jsonify({"error": "No language selected"}), 500
-    
+
     if not voice_id:
         return jsonify({"error": "No voice_id selected"}), 500
 
@@ -50,11 +50,7 @@ def upload_file():
     print(f"Language: {language}")
     print(f"Voice Model Name: {voice_id}")
     print(f"Generate Transcript: {generate_transcript}")
-
-    if os.path.splitext(file.filename)[1].lower() in ['.mp4', '.mov']:
-        process_fn = process_video
-    else:
-        process_fn = process_audio
+    print(f"Lipsync Engine: {lipsync_engine}")
 
     if file:
         file_path = save_file_obj_to_hashed_fname(
@@ -62,7 +58,11 @@ def upload_file():
 
         # Here you can call your processing logic
         lang_enum = ValidISOLanguages[language]
-        ret_val = process_fn(file_path, lang_enum, voice_id, generate_transcript)
+        lipsync_enum = LipsyncEngines[lipsync_engine]
+        if os.path.splitext(file.filename)[1].lower() in ['.mp4', '.mov']:
+            ret_val = process_video(file_path, lang_enum, voice_id, generate_transcript, lipsync_enum)
+        else:
+            ret_val = process_audio(file_path, lang_enum, voice_id, generate_transcript)
 
         response = {"message": "Processed successfully"}
         response.update(ret_val)
@@ -114,6 +114,10 @@ def add_voice_samples():
     add_voice_sample(voice_id, voice_filepaths)
     return jsonify({"message": "Success"}), 200
 
+@app.route('/add_email_to_waitlist', methods=['POST'])
+def add_email_to_waitlist():
+    pass
+
 #TODO: doing this for caching, but it's probably adding latency
 def save_file_obj_to_hashed_fname(file_obj, target_dir, tmp_dir):
     fp = os.path.join(tmp_dir, file_obj.filename)
@@ -145,7 +149,7 @@ def create_voice(voice_filepaths, voice_name, voice_desc):
     return VoiceLab().create_voice(voice_filepaths, voice_name, voice_desc)
 
 
-def process_video(input_path, language, voice_id, generate_transcript):
+def process_video(input_path, language, voice_id, generate_transcript, lipsync_enum):
     # This is a placeholder for your video processing logic
     # Use your video processing logic here, save the processed video to the PROCESSED_FOLDER
     # and return the filename of the processed video.
@@ -153,7 +157,7 @@ def process_video(input_path, language, voice_id, generate_transcript):
     # output_path = os.path.join(PROCESSED_FOLDER, os.path.basename(input_path))
     # os.rename(input_path, output_path)
     # return os.path.basename(output_path)
-    pipeline = VideoPipeline(input_path, language, voice_id, generate_transcript)
+    pipeline = VideoPipeline(input_path, language, voice_id, generate_transcript, lipsync_enum)
     return pipeline.run()
 
 

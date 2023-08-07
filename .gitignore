@@ -6,3 +6,4 @@ cachedir
 resources/*
 uploads/
 processed/
+tmp/

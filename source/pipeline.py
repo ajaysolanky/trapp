@@ -6,18 +6,19 @@ from speech_to_text import SpeechToText
 from transcript_summary import TranscriptSummary
 from translate import TranslateOpenAI
 from text_to_speech import TextToSpeech
-from video_lipsync import VideoLipsyncGooey, VideoLipsyncReplicate
+from video_lipsync import VideoLipsyncGooey, VideoLipsyncSynchronicity
 from config.valid_languages import ValidISOLanguages
 from utilities.utils import convert_mp4_to_mp3, convert_mov_to_mp4
 from utilities.file_upload import S3UploaderObj
 
 
 class VideoPipeline(object):
-    def __init__(self, sample_path, output_lang, voice_id, generate_transcript):
+    def __init__(self, sample_path, output_lang, voice_id, generate_transcript, lipsync_enum):
         self.sample_path = sample_path
         self.output_lang = output_lang
         self.voice_id = voice_id
         self.generate_transcript = generate_transcript
+        self.lipsync_enum = lipsync_enum
 
     def run(self):
         print(f"Sample path: {self.sample_path}")
@@ -54,7 +55,7 @@ class VideoPipeline(object):
 
         # Video lipsync
         if sample_file_type == '.mp4':
-            return_link = VideoLipsyncGooey.get_download_link_synced_video(
+            return_link = self.lipsync_enum.value.get_download_link_synced_video(
                 new_sample_path, output_audio_fpath)
         else:
             raise Exception("Haven't built a way to return audio link yet")

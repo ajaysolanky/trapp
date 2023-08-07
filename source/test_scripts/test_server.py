@@ -8,7 +8,12 @@ BASE_URL = "http://127.0.0.1:5000/"
 def process_file(file_path):
     with open(file_path, 'rb') as video_file:
         files = {'file': (file_path.split("/")[-1], video_file)}
-        data = {'language': 'HI', 'voice_id': 'aihrQRwznfxTynGbVlKt', 'generate_transcript': True}
+        data = {
+            'language': 'HI',
+            'voice_id': 'aihrQRwznfxTynGbVlKt',
+            'generate_transcript': False,
+            'lipsync_engine': 'SIMPLE_OVERLAY'
+            }
         response = requests.post(BASE_URL + 'upload', files=files, data=data)
 
         if response.status_code == 200:
@@ -59,7 +64,7 @@ def add_samples_to_voice(voice_id, filepaths):
 
 
 if __name__ == "__main__":
-    file_path = "resources/ajay_talking_video_4.mp4"
+    file_path = "resources/ajay_talking_video_2.mp4"
     process_file(file_path)
 
     # filepaths = ['resources/ajay_voice_sample_1.mp3']
