@@ -71,10 +71,9 @@ class VideoLipsyncSynchronicity(VideoLipsync):
             return response.json()
         raise Exception('Something went wrong')
 
-class SimpleOverlay(VideoLipsync):
+class SimpleOverlay:
     @staticmethod
-    @cachethis
-    def get_download_link_synced_video(video_path, audio_path):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=False):
         # Load audio and video clips
         audio = AudioFileClip(audio_path)
         video = VideoFileClip(video_path)
@@ -83,27 +82,35 @@ class SimpleOverlay(VideoLipsync):
         audio_duration = audio.duration
         video_duration = video.duration
 
-        # If video is longer than audio, crop video
-        if video_duration > audio_duration:
-            video = video.subclip(0, audio_duration)
+        if match_speed:
+            # Adjust speed of the video to match the audio duration
+            speed_factor = video_duration / audio_duration
+            video = video.fx(vfx.speedx, speed_factor)
 
-        # If audio is longer than video, loop the video
-        elif audio_duration > video_duration:
-            n_loops = int(audio_duration // video_duration) + 1
-            video = concatenate_videoclips([video] * n_loops)
-            video = video.subclip(0, audio_duration)
+            # Crop the video if it's still longer after speed adjustment (due to rounding)
+            if video.duration > audio_duration:
+                video = video.subclip(0, audio_duration)
+        else:
+            # If video is longer than audio, crop video
+            if video_duration > audio_duration:
+                video = video.subclip(0, audio_duration)
+
+            # If audio is longer than video, loop the video
+            elif audio_duration > video_duration:
+                n_loops = int(audio_duration // video_duration) + 1
+                video = concatenate_videoclips([video] * n_loops)
+                video = video.subclip(0, audio_duration)
 
         # Set the audio of the video clip to our audio clip
         video = video.set_audio(audio)
 
         # Write to output file
-        output_fn = "synced_" +  os.path.basename(video_path)
+        output_fn = "synced_" + os.path.basename(video_path)
         video_ext = os.path.splitext(output_fn)[1]
         result_filepath = os.path.join(TEMP_FOLDER, output_fn)
         video.write_videofile(result_filepath, codec="libx264")
 
         return S3UploaderObj.upload(result_filepath, str(uuid.uuid4()) + video_ext)
-
 
 # import pdb; pdb.set_trace()
 # print(SimpleOverlay.get_download_link_synced_video("resources/ajay_talking_video_5.mp4", "tmp/triple_length.mp3"))

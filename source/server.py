@@ -38,7 +38,12 @@ def upload_file():
     voice_id = request.form.get('voice_id')
     language = request.form.get('language')
     generate_transcript = request.form.get('generate_transcript') == 'True'
-    lipsync_engine = request.form.get('lipsync_engine', 'GOOEY')
+    use_lip_sync = request.form.get('use_lip_sync', 'True') == 'True'
+    # lipsync_engine = request.form.get('lipsync_engine', 'GOOEY')
+    if use_lip_sync:
+        lipsync_engine = 'GOOEY'
+    else:
+        lipsync_engine = 'SIMPLE_OVERLAY'
 
     if not language:
         return jsonify({"error": "No language selected"}), 500
