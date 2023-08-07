@@ -12,7 +12,7 @@ def process_file(file_path):
             'language': 'HI',
             'voice_id': 'aihrQRwznfxTynGbVlKt',
             'generate_transcript': False,
-            'lipsync_engine': 'SIMPLE_OVERLAY'
+            'use_lip_sync': False
             }
         response = requests.post(BASE_URL + 'upload', files=files, data=data)
 

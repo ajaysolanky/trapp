@@ -16,13 +16,13 @@ from config.config import TEMP_FOLDER
 
 class VideoLipsync(ABC):
     @abstractmethod
-    def get_download_link_synced_video(video_path, audio_path):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         pass
 
 class VideoLipsyncReplicate(VideoLipsync):
     @staticmethod
     @cachethis
-    def get_download_link_synced_video(video_path, audio_path):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         output = replicate.run(
             "devxpy/cog-wav2lip:8d65e3f4f4298520e079198b493c25adfc43c058ffec924f2aefc8010ed25eef",
             input={
@@ -36,7 +36,7 @@ class VideoLipsyncReplicate(VideoLipsync):
 class VideoLipsyncGooey(VideoLipsync):
     @staticmethod
     @cachethis
-    def get_download_link_synced_video(video_path, audio_path):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         files = [
             ("input_face", open(video_path, "rb")),
             ("input_audio", open(audio_path, "rb")),
@@ -57,7 +57,7 @@ class VideoLipsyncGooey(VideoLipsync):
 class VideoLipsyncSynchronicity(VideoLipsync):
     @staticmethod
     @cachethis
-    def get_download_link_synced_video(video_path, audio_path):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         # can parallelize this
         audio_ext = os.path.splitext(audio_path)[1]
         audio_link = S3UploaderObj.upload(audio_path, str(uuid.uuid4()) + audio_ext)
@@ -73,10 +73,13 @@ class VideoLipsyncSynchronicity(VideoLipsync):
 
 class SimpleOverlay:
     @staticmethod
-    def get_download_link_synced_video(video_path, audio_path, match_speed=False):
+    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         # Load audio and video clips
         audio = AudioFileClip(audio_path)
         video = VideoFileClip(video_path)
+
+        # Capture original aspect ratio
+        original_aspect_ratio = video.size[0] / video.size[1]
 
         # Check the durations
         audio_duration = audio.duration
@@ -100,6 +103,12 @@ class SimpleOverlay:
                 n_loops = int(audio_duration // video_duration) + 1
                 video = concatenate_videoclips([video] * n_loops)
                 video = video.subclip(0, audio_duration)
+
+        # Resize video to maintain the original aspect ratio
+        new_height = video.size[1]
+        new_width = int(original_aspect_ratio * new_height)
+        if flip_video:
+            video = video.resize((new_height, new_width))
 
         # Set the audio of the video clip to our audio clip
         video = video.set_audio(audio)

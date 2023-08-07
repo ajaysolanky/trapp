@@ -30,11 +30,13 @@ class VideoPipeline(object):
         sample_file_type = sample_file_type.lower()
 
         # mov to mp3
+        flip_video = False
         print('CONVERTING MOV TO MP3')
         if sample_file_type.lower() == '.mov':
             new_sample_path = sample_file_name + '.mp4'
             convert_mov_to_mp4(self.sample_path, new_sample_path)
             sample_file_type = '.mp4'
+            flip_video = True
         else:
             new_sample_path = self.sample_path
 
@@ -56,7 +58,7 @@ class VideoPipeline(object):
         # Video lipsync
         if sample_file_type == '.mp4':
             return_link = self.lipsync_enum.value.get_download_link_synced_video(
-                new_sample_path, output_audio_fpath)
+                new_sample_path, output_audio_fpath, flip_video=flip_video)
         else:
             raise Exception("Haven't built a way to return audio link yet")
 
