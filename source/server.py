@@ -37,8 +37,8 @@ def upload_file():
 
     voice_id = request.form.get('voice_id')
     language = request.form.get('language')
-    generate_transcript = request.form.get('generate_transcript') == 'True'
-    use_lip_sync = request.form.get('use_lip_sync', 'True') == 'True'
+    generate_transcript = request.form.get('generate_transcript') == 'true'
+    use_lip_sync = request.form.get('use_lip_sync', 'true') == 'true'
     # lipsync_engine = request.form.get('lipsync_engine', 'GOOEY')
     if use_lip_sync:
         lipsync_engine = 'GOOEY'

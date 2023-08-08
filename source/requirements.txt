@@ -7,3 +7,5 @@ flask
 moviepy
 imageio[ffmpeg]
 boto3
+
+# on EC2: sudo yum install -y mesa-libGL
