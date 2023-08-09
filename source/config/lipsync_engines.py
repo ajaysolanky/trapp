@@ -6,3 +6,4 @@ class LipsyncEngines(Enum):
     GOOEY = VideoLipsyncGooey
     SYNCHRONICITY = VideoLipsyncSynchronicity
     SIMPLE_OVERLAY = SimpleOverlay
+    # REPLICATE = VideoLipsyncReplicate

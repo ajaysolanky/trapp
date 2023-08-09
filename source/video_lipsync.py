@@ -19,19 +19,19 @@ class VideoLipsync(ABC):
     def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
         pass
 
-class VideoLipsyncReplicate(VideoLipsync):
-    @staticmethod
-    @cachethis
-    def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
-        output = replicate.run(
-            "devxpy/cog-wav2lip:8d65e3f4f4298520e079198b493c25adfc43c058ffec924f2aefc8010ed25eef",
-            input={
-                "face": open(video_path, "rb"),
-                "audio": open(audio_path, "rb"),
-                "smooth": True
-                }
-        )
-        return output
+# class VideoLipsyncReplicate(VideoLipsync):
+#     @staticmethod
+#     @cachethis
+#     def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
+#         output = replicate.run(
+#             "devxpy/cog-wav2lip:8d65e3f4f4298520e079198b493c25adfc43c058ffec924f2aefc8010ed25eef",
+#             input={
+#                 "face": open(video_path, "rb"),
+#                 "audio": open(audio_path, "rb"),
+#                 "smooth": True
+#                 }
+#         )
+#         return output
 
 class VideoLipsyncGooey(VideoLipsync):
     @staticmethod
