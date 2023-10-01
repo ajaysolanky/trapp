@@ -1,0 +1,11 @@
+App Description:
+Trapp is an iphone app that allows the user to record a video or a voice memo of themselves talking, and then translate that into the desired target language. Watch the video for a demo. Also, please include the video as one of the app store screens.
+
+Screens / Captions:
+1) trapp_video.mp4: Trapp lets you speak another language... without ever learning it!
+
+2) intro.png: Send translated voice memos and video clips back and forth
+
+3) record_screen.png: Record yourself saying whatever you want in whichever language
+
+4) voice_picker.png: Use your own authentic voice for translations

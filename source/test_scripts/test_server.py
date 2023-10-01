@@ -12,7 +12,7 @@ def process_file(file_path):
             'language': 'HI',
             'voice_id': 'aihrQRwznfxTynGbVlKt',
             'generate_transcript': False,
-            'use_lip_sync': False
+            'use_lip_sync': 'true'
             }
         response = requests.post(BASE_URL + 'upload', files=files, data=data)
 
@@ -64,7 +64,7 @@ def add_samples_to_voice(voice_id, filepaths):
 
 
 if __name__ == "__main__":
-    file_path = "resources/ajay_talking_video_2.mp4"
+    file_path = "resources/mov_sample.MOV"
     process_file(file_path)
 
     # filepaths = ['resources/ajay_voice_sample_1.mp3']

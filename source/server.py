@@ -41,7 +41,8 @@ def upload_file():
     use_lip_sync = request.form.get('use_lip_sync', 'true') == 'true'
     # lipsync_engine = request.form.get('lipsync_engine', 'GOOEY')
     if use_lip_sync:
-        lipsync_engine = 'GOOEY'
+        # lipsync_engine = 'GOOEY'
+        lipsync_engine = 'SYNCHRONICITY'
     else:
         lipsync_engine = 'SIMPLE_OVERLAY'
 

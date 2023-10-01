@@ -11,6 +11,7 @@ import imageio_ffmpeg as ffmpeg
 from utilities.file_upload import S3UploaderObj
 from utilities.cache import cachethis
 from config.config import TEMP_FOLDER
+from utilities.video_utils import download_video_from_url, crop_video_from_bottom
 
 # TODO: should slow down / speed up video to match length of audio
 
@@ -68,8 +69,15 @@ class VideoLipsyncSynchronicity(VideoLipsync):
         response = requests.post(endpoint, params={"audio_uri": audio_link, "video_uri": video_link})
 
         if response.status_code == 200:
-            return response.json()
-        raise Exception('Something went wrong')
+            video_url = response.json()
+        else:
+            raise Exception('Something went wrong')
+        
+        tmp_filename = str(uuid.uuid4())+'.mp4'
+        tmp_path = os.path.join(TEMP_FOLDER, tmp_filename)
+        download_video_from_url(video_url, tmp_path)
+        cropped_video_path = crop_video_from_bottom(tmp_path, 0.173)
+        return S3UploaderObj.upload(cropped_video_path, tmp_filename)
 
 class SimpleOverlay:
     @staticmethod
