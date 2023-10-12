@@ -7,5 +7,6 @@ flask
 moviepy
 imageio[ffmpeg]
 boto3
+opencv-python-headless
 
 # on EC2: sudo yum install -y mesa-libGL

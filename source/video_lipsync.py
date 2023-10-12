@@ -4,6 +4,7 @@ import os
 from abc import ABC, abstractmethod
 import requests
 import uuid
+import time
 import subprocess
 from moviepy.editor import *
 import imageio_ffmpeg as ffmpeg
@@ -59,25 +60,56 @@ class VideoLipsyncSynchronicity(VideoLipsync):
     @staticmethod
     @cachethis
     def get_download_link_synced_video(video_path, audio_path, match_speed=True, flip_video=False):
-        # can parallelize this
-        audio_ext = os.path.splitext(audio_path)[1]
-        audio_link = S3UploaderObj.upload(audio_path, str(uuid.uuid4()) + audio_ext)
-        video_ext = os.path.splitext(video_path)[1]
-        video_link = S3UploaderObj.upload(video_path, str(uuid.uuid4()) + video_ext)
+        MAX_QUERY_TIME = 60*15
+        start_time = time.time()
+        try:
+            # can parallelize this
+            audio_ext = os.path.splitext(audio_path)[1]
+            audio_link = S3UploaderObj.upload(audio_path, str(uuid.uuid4()) + audio_ext)
+            video_ext = os.path.splitext(video_path)[1]
+            video_link = S3UploaderObj.upload(video_path, str(uuid.uuid4()) + video_ext)
 
-        endpoint = 'https://rogue-yogi--wav2lip-2-v0-1-02-generate-sync.modal.run'
-        response = requests.post(endpoint, params={"audio_uri": audio_link, "video_uri": video_link})
+            endpoint = 'https://api.synclabs.so/video'
+            headers = {
+                "x-api-key": os.environ['SYNC_KEY'],
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            }
+            response = requests.post(endpoint,
+                                    json={
+                                        "audioUrl": audio_link,
+                                        "videoUrl": video_link,
+                                        "synergize": True # change to true for 10x speedup w/ quality penalty
+                                    },
+                                    headers=headers)
 
-        if response.status_code == 200:
-            video_url = response.json()
-        else:
-            raise Exception('Something went wrong')
-        
-        tmp_filename = str(uuid.uuid4())+'.mp4'
-        tmp_path = os.path.join(TEMP_FOLDER, tmp_filename)
-        download_video_from_url(video_url, tmp_path)
-        cropped_video_path = crop_video_from_bottom(tmp_path, 0.173)
-        return S3UploaderObj.upload(cropped_video_path, tmp_filename)
+            if response.status_code not in [200, 201]:
+                raise Exception('Something went wrong with submission')
+            
+            video_id = response.json()['id']
+
+            # Now we need to poll the API to wait for the processing to complete
+            # I'll use a simple loop with sleep for this purpose. Adjust as necessary.
+            poll_endpoint = f'https://api.synclabs.so/video/{video_id}'
+            while time.time() - start_time < MAX_QUERY_TIME:
+                time.sleep(1)
+                poll_response = requests.get(poll_endpoint, headers=headers)
+                
+                if poll_response.status_code != 200:
+                    raise Exception('Something went wrong with polling')
+                
+                if poll_response.json()['status'] == 'COMPLETED':
+                    return poll_response.json()['url']
+            
+            raise Exception('Video processing did not complete in expected time')
+        finally:
+            print(f"Synchronicity execution time: {time.time() - start_time:.2f} seconds")
+
+        # tmp_filename = str(uuid.uuid4())+'.mp4'
+        # tmp_path = os.path.join(TEMP_FOLDER, tmp_filename)
+        # download_video_from_url(video_url, tmp_path)
+        # cropped_video_path = crop_video_from_bottom(tmp_path, 0.173)
+        # return S3UploaderObj.upload(cropped_video_path, tmp_filename)
 
 class SimpleOverlay:
     @staticmethod

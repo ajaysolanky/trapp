@@ -5,10 +5,13 @@ import shutil
 from pipeline import VideoPipeline, AudioPipeline
 from config.valid_languages import ValidISOLanguages
 from config.lipsync_engines import LipsyncEngines
+from utilities.utils import get_media_duration_seconds
 from voice_lab import VoiceLab
 from utilities.hash_file import hash_file_from_fp
 from utilities.cache import cachethis
 from config.config import UPLOAD_FOLDER, PROCESSED_FOLDER, TEMP_FOLDER
+
+MAX_MEDIA_LEN_SECONDS = 10
 
 template_dir = os.path.abspath('templates/')
 app = Flask(__name__, template_folder=template_dir)
@@ -62,7 +65,9 @@ def upload_file():
         file_path = save_file_obj_to_hashed_fname(
             file, UPLOAD_FOLDER, TEMP_FOLDER)
 
-        # Here you can call your processing logic
+        media_len = get_media_duration_seconds(file_path)
+        assert media_len <= MAX_MEDIA_LEN_SECONDS, f"Media too long, max is {MAX_MEDIA_LEN_SECONDS} seconds"
+
         lang_enum = ValidISOLanguages[language]
         lipsync_enum = LipsyncEngines[lipsync_engine]
         if os.path.splitext(file.filename)[1].lower() in ['.mp4', '.mov']:
